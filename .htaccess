@@ -1,0 +1,11 @@
+# .htaccess در ریشه
+Options -Indexes
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# Pretty URLs برای پست‌ها: /post/slug  -> /post.php?slug=slug
+RewriteRule ^post/([A-Za-z0-9\-\p{L}]+)/?$ post.php?slug=$1 [L,QSA]
+
+# جلوگیری از دسترسی مستقیم به فایل‌های حساس
+RewriteRule ^config/ - [F,L]
+RewriteRule ^db/ - [F,L]
+</IfModule>
