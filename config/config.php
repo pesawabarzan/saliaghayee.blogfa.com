@@ -1,41 +1,53 @@
 <?php
 /**
- * config/config.php — تنظیمات اصلی برنامه
- * - در محیط تولید، حتماً app_secret، اطلاعات SMTP و نمایش خطاها را به‌روز کنید.
+ * config/config.php — نسخه Production-ready
+ * - روی سرور، متغیرهای محیطی (ENV) را ست کن.
+ * - در لوکال، مقادیر پیش‌فرض زیر فعال می‌شوند.
  */
+
+function env(string $key, $default = null) {
+  $v = getenv($key);
+  return ($v === false || $v === '') ? $default : $v;
+}
 
 $CONFIG = [
   // ===== Database =====
-  'db_host' => 'localhost',
-  'db_name' => 'blog_db',
-  'db_user' => 'root',
-  'db_pass' => '',
+  'db_host' => env('DB_HOST', 'localhost'),
+  'db_name' => env('DB_NAME', 'blog_db'),
+  'db_user' => env('DB_USER', 'root'),
+  'db_pass' => env('DB_PASS', ''),
 
   // ===== Base URL =====
-  // برای لوکال XAMPP/WAMP:
-  'base_url' => 'http://localhost/php-blog',
-  // در هاست/دامنه واقعی، این را به آدرس دامنه تغییر دهید. مثال:
-  // 'base_url' => 'https://example.com',
+  // روی سرور حتماً BASE_URL را ست کن (بدون اسلش آخر).
+  'base_url' => rtrim(env('BASE_URL', 'http://localhost/php-blog'), '/'),
 
   // ===== App =====
-  'app_secret' => 'CHANGE_THIS_IN_PROD', // در تولید، مقدار امن و طولانی بگذارید.
-  'display_errors' => true,              // فقط در لوکال. در تولید: false
+  'app_secret'     => env('APP_SECRET', 'CHANGE_THIS_IN_PROD'),
+  'display_errors' => env('APP_DEBUG', '0') === '1' ? true : false,
 
   // ===== Admin Contact =====
-  'admin_email' => 'admin@example.com',  // ایمیل مقصد فرم تماس/فوتر
+  'admin_email' => env('ADMIN_EMAIL', 'admin@example.com'),
 
-  // ===== SMTP (برای ارسال ایمیل فرم تماس) =====
-  'smtp_enabled' => false,               // در لوکال خاموش؛ در تولید اگر لازم شد true
-  'smtp_host'    => 'smtp.example.com',
-  'smtp_port'    => 587,
-  'smtp_secure'  => 'tls',               // 'tls' یا 'ssl'
-  'smtp_user'    => '',
-  'smtp_pass'    => '',
+  // ===== SMTP (برای فرم تماس) =====
+  'smtp_enabled' => env('SMTP_ENABLED', '0') === '1',
+  'smtp_host'    => env('SMTP_HOST', 'smtp.example.com'),
+  'smtp_port'    => (int) env('SMTP_PORT', 587),
+  'smtp_secure'  => env('SMTP_SECURE', 'tls'),  // tls | ssl
+  'smtp_user'    => env('SMTP_USER', ''),
+  'smtp_pass'    => env('SMTP_PASS', ''),
 
-  // ===== Comments (نظرات) =====
+  // ===== Comments =====
   'comments' => [
-    'enabled'           => true,  // نمایش فرم نظر زیر هر پست
-    'require_moderation'=> true,  // تأیید مدیر قبل از نمایش
-    'min_secs_between'  => 60,    // ریت‌لیمیت بر اساس IP (ثانیه)
+    'enabled'            => env('COMMENTS_ENABLED', '1') === '1',
+    'require_moderation' => env('COMMENTS_REQUIRE_MOD', '1') === '1',
+    'min_secs_between'   => (int) env('COMMENTS_MIN_SECS', 60),
   ],
 ];
+
+// تنظیم نمایش خطا بر اساس پیکربندی
+if ($CONFIG['display_errors']) {
+  ini_set('display_errors', '1');
+  error_reporting(E_ALL);
+} else {
+  ini_set('display_errors', '0');
+}

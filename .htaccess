@@ -1,11 +1,39 @@
-# .htaccess در ریشه
+SetEnv DB_HOST localhost
+SetEnv DB_NAME my_db
+SetEnv DB_USER my_user
+SetEnv DB_PASS my_pass
+SetEnv BASE_URL https://www.farzamaskary.ir/saliaghayee
+SetEnv APP_SECRET your-long-random-secret
+SetEnv APP_DEBUG 0
+
+
+# public_html/saliaghayee/.htaccess
+
 Options -Indexes
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
-# Pretty URLs برای پست‌ها: /post/slug  -> /post.php?slug=slug
-RewriteRule ^post/([A-Za-z0-9\-\p{L}]+)/?$ post.php?slug=$1 [L,QSA]
 
-# جلوگیری از دسترسی مستقیم به فایل‌های حساس
-RewriteRule ^config/ - [F,L]
-RewriteRule ^db/ - [F,L]
+# بسیار مهم وقتی پروژه داخل ساب‌فولدر است:
+RewriteBase /saliaghayee/
+
+# اگر فایل/دایرکتوری واقعی نیست، بفرست به قوانین ما
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# آدرس‌های زیبای پست‌ها: /post/هر-اسلاگ → /post.php?slug=...
+# هر چیزی بعد از post/ تا قبل از / بعدی را به عنوان اسلاگ بگیر
+RewriteRule ^post/(.+)$ post.php?slug=$1 [L,QSA,NC]
+
+# اختیاری: اگر خواستی صفحه اصلی را بدون index.php هم داشته باشی
+# RewriteRule ^$ index.php [L]
+
 </IfModule>
+
+# جلوگیری از دسترسی به مسیرهای حساس
+<FilesMatch "(^\.|config\.php|composer\.(json|lock))">
+  Require all denied
+</FilesMatch>
+
+# نوع محتواها (به دلخواه)
+AddType image/webp .webp
